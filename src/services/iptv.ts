@@ -78,13 +78,16 @@ export async function getCachedIptvChannels(db: SQLiteDatabase, sourceId: number
 }
 
 export async function cacheIptvChannels(db: SQLiteDatabase, sourceId: number, channels: IptvChannel[]) {
+  // 部分 M3U（尤其是全球全量）会重复列出同一个 URL，
+  // 而缓存表以 (sourceId, url) 为主键，先按 URL 去重再写入。
+  const uniqueChannels = [...new Map(channels.map((channel) => [channel.url, channel])).values()];
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM iptv_source_channel_cache WHERE sourceId = ?', [sourceId]);
     const statement = await db.prepareAsync(
-      'INSERT INTO iptv_source_channel_cache (sourceId, name, url, logo, groupTitle) VALUES (?, ?, ?, ?, ?)'
+      'INSERT OR REPLACE INTO iptv_source_channel_cache (sourceId, name, url, logo, groupTitle) VALUES (?, ?, ?, ?, ?)'
     );
     try {
-      for (const channel of channels) {
+      for (const channel of uniqueChannels) {
         await statement.executeAsync(sourceId, channel.name, channel.url, channel.logo ?? '', channel.group ?? '');
       }
     } finally {

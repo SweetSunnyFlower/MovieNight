@@ -11,9 +11,9 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
-# AGP 9 / R8 full mode strips Room implementations' no-arg constructors,
-# which makes WorkManager crash on release builds (SDK 58 template default).
+# Add any project specific keep options here:
+
+# @generated begin expo-build-properties - expo prebuild (DO NOT MODIFY)
 -keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }
 -keep class * extends androidx.work.InputMerger { <init>(); }
-
-# Add any project specific keep options here:
+# @generated end expo-build-properties

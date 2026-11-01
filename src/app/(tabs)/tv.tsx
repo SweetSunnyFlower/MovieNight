@@ -9,7 +9,7 @@ import { cacheIptvChannels, fetchIptvChannels, getCachedIptvChannels, probeStrea
 import { getIptvSourceStats } from '@/services/database';
 import { getNowPlayingEpg } from '@/services/iptv-library';
 import { syncEpgForCountry } from '@/services/epg';
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import {
   getIptvLibraryChannels,
   getIptvLibraryFilterOptions,
@@ -79,7 +79,7 @@ export default function TvScreen() {
   const isDark = useThemeName() === 'dark';
   const palette = isDark ? darkPalette : lightPalette;
   const { sources } = useIptv();
-  const { isLiveFavorite, toggleLiveFavorite, liveWatchHistory } = useUserData();
+  const { isLiveFavorite, toggleLiveFavorite, liveWatchHistory, clearLiveWatchHistory } = useUserData();
 
   const [tab, setTab] = useState<TvTab>('mine');
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(null);
@@ -107,6 +107,7 @@ export default function TvScreen() {
   const [libraryLoadingMore, setLibraryLoadingMore] = useState(false);
   const [libraryError, setLibraryError] = useState('');
   const [libraryChannels, setLibraryChannels] = useState<IptvLibraryChannel[]>([]);
+  const libraryListRef = useRef<FlashListRef<IptvLibraryChannel>>(null);
   const [countryOptions, setCountryOptions] = useState<FilterPickerOption[]>([]);
   const [languageOptions, setLanguageOptions] = useState<FilterPickerOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<FilterPickerOption[]>([]);
@@ -395,6 +396,10 @@ export default function TvScreen() {
     return () => clearTimeout(timer);
   }, [libraryQuery, loadLibrary, tab]);
 
+  useEffect(() => {
+    libraryListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [libraryQuery, filterCountry, filterLanguage, filterCategory, includeNsfw]);
+
   const selectedState = selectedSourceId != null ? sourceStates[selectedSourceId] : undefined;
   const selectedSource = sources.find((item) => item.id === selectedSourceId) ?? null;
   const selectedChannels = useMemo(() => {
@@ -617,6 +622,12 @@ export default function TvScreen() {
         <View style={[styles.recentWrap, { borderBottomColor: palette.border }]}>
           <Text style={[styles.recentTitle, { color: palette.secondaryText }]}>最近看过的直播</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Pressable
+              style={[styles.recentClear, { borderColor: palette.border }]}
+              onPress={() => void clearLiveWatchHistory()}
+              hitSlop={6}>
+              <Text style={[styles.recentClearText, { color: palette.secondaryText }]}>清空</Text>
+            </Pressable>
             {liveWatchHistory.slice(0, 8).map((item) => (
               <Pressable
                 key={item.id}
@@ -793,6 +804,7 @@ export default function TvScreen() {
             <ListState text={libraryError} actionLabel="重试" onAction={syncLibrary} palette={palette} />
           ) : (
             <FlashList
+              ref={libraryListRef}
               data={libraryChannels}
               keyExtractor={(item) => item.id}
               viewabilityConfig={CHANNEL_VIEWABILITY}
@@ -802,9 +814,22 @@ export default function TvScreen() {
               renderItem={renderLibraryChannel}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.listContent}
-              ListFooterComponent={libraryLoadingMore ? (
-                <View style={styles.loadingMore}>
-                  <ActivityIndicator size="small" color={palette.secondaryText} />
+              ListFooterComponent={libraryChannels.length > 0 ? (
+                <View style={styles.libraryFooter}>
+                  {libraryLoadingMore ? (
+                    <>
+                      <ActivityIndicator size="small" color={palette.secondaryText} />
+                      <Text style={[styles.libraryFooterText, { color: palette.secondaryText }]}>
+                        正在加载更多…
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={[styles.libraryFooterText, { color: palette.secondaryText }]}>
+                      {libraryHasMore
+                        ? '继续下滑加载更多'
+                        : `已加载全部 · 共 ${libraryChannels.length} 个频道`}
+                    </Text>
+                  )}
                 </View>
               ) : null}
             />
@@ -998,6 +1023,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '700',
+  },
+  recentClear: {
+    height: 30,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+  },
+  recentClearText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '600',
   },
   recentChip: {
     maxWidth: 160,
@@ -1195,9 +1232,17 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 136,
   },
-  loadingMore: {
-    minHeight: 48,
+  libraryFooter: {
+    minHeight: 52,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  libraryFooterText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
   },
 });

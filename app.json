@@ -60,7 +60,12 @@
         }
       ],
       "expo-background-task",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png"
+        }
+      ],
       [
         "expo-build-properties",
         {

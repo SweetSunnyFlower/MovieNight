@@ -539,6 +539,8 @@ npm run prebuild:android:prod
 npm run assemble:android:release:prod
 ```
 
+> 注意：`prebuild` 会清空并重建 `android/` 目录，覆盖掉原生工程里的手动修改。执行后需要按 [常见问题 9](#9-执行-prebuild-后-release-构建异常) 恢复几处本地补丁。
+
 构建前请确认使用 Node 22+（项目 `.nvmrc` 已固定）。`assemble:android:release:prod` 生成的 APK 位于：
 
 ```text
@@ -764,6 +766,20 @@ android/gradle/wrapper/gradle-wrapper.properties
 ### 8. 直播播放一段时间后停止
 
 常见原因是直播流本身的分片返回 404 或连接被重置。播放器会自动重连当前频道，最多 3 次；仍失败会显示「播放失败，请重试」。如果频繁发生，建议在频道列表中换一个可用线路，或重新同步 / 刷新直播源。
+
+### 9. 执行 prebuild 后 Release 构建异常
+
+`npx expo prebuild --platform android` 会先清空再重建 `android/` 目录，因此下面这些手动原生修改会被重置为 Expo 模板默认值：
+
+- `android/gradle.properties` 的 `android.enableMinifyInReleaseBuilds` 会被改回 `true`。在 SDK 58 + AGP 9 下，R8 会裁剪 WorkManager/Room 的构造器，导致 release 包启动即崩溃。
+- `android/app/build.gradle` 中读取 `keystore.properties` 的 release 签名逻辑会被删除，退回 debug 签名。
+- `android/gradle/wrapper/gradle-wrapper.properties` 的 Gradle 分发地址会被改回 `services.gradle.org`，国内构建可能下载超时。
+
+所以 `prebuild` 不应该当作常规打包步骤。只有在需要重新生成图标 / 原生工程时才运行，并在运行后恢复这三处补丁：
+
+- `android/gradle.properties`：`android.enableMinifyInReleaseBuilds=false`
+- `android/app/build.gradle`：恢复 `keystoreProperties` 块和 release `signingConfig` 条件判断
+- `android/gradle/wrapper/gradle-wrapper.properties`：恢复可访问的 Gradle 镜像并放宽超时
 
 ## 开发规范建议
 
