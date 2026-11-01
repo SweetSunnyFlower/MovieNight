@@ -601,12 +601,6 @@ export default function TvScreen() {
             </>
           ) : (
             <>
-              <Pressable
-                onPress={() => router.push({ pathname: '/epg', params: { country: filterCountry || 'CN' } })}
-                hitSlop={8}
-                style={styles.headerButton}>
-                <Text style={[styles.headerButtonText, { color: palette.text }]}>节目表</Text>
-              </Pressable>
               <Pressable onPress={() => setDrawerOpen(true)} hitSlop={8} style={styles.headerButton}>
                 <Text style={[styles.headerButtonText, { color: palette.text }]}>筛选</Text>
               </Pressable>
