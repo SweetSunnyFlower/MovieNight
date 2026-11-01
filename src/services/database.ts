@@ -191,6 +191,7 @@ export async function migrateDb(db: SQLiteDatabase): Promise<void> {
       url TEXT NOT NULL,
       logo TEXT NOT NULL DEFAULT '',
       groupTitle TEXT NOT NULL DEFAULT '',
+      tvgId TEXT NOT NULL DEFAULT '',
       updatedAt INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       PRIMARY KEY (sourceId, url)
     );
@@ -272,6 +273,7 @@ export async function migrateDb(db: SQLiteDatabase): Promise<void> {
       id TEXT PRIMARY KEY,
       channelName TEXT NOT NULL,
       channelUrl TEXT NOT NULL,
+      tvgId TEXT,
       sourceId INTEGER,
       sourceName TEXT NOT NULL DEFAULT '',
       logo TEXT NOT NULL DEFAULT '',
@@ -323,6 +325,11 @@ export async function migrateDb(db: SQLiteDatabase): Promise<void> {
   const existingLiveHistoryColumns = new Set(liveHistoryColumns.map((column) => column.name));
   await ensureColumn(db, 'live_watch_history', 'kind', `TEXT NOT NULL DEFAULT 'm3u'`, existingLiveHistoryColumns);
   await ensureColumn(db, 'live_watch_history', 'channelId', 'TEXT', existingLiveHistoryColumns);
+  await ensureColumn(db, 'live_watch_history', 'tvgId', 'TEXT', existingLiveHistoryColumns);
+
+  const sourceCacheColumns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(iptv_source_channel_cache)');
+  const existingSourceCacheColumns = new Set(sourceCacheColumns.map((column) => column.name));
+  await ensureColumn(db, 'iptv_source_channel_cache', 'tvgId', `TEXT NOT NULL DEFAULT ''`, existingSourceCacheColumns);
 
   await migrateIptvLibraryFts(db);
 
@@ -888,6 +895,7 @@ export async function getLiveWatchHistory(db: SQLiteDatabase) {
     channelId: string | null;
     channelName: string;
     channelUrl: string;
+    tvgId: string | null;
     sourceId: number | null;
     sourceName: string;
     logo: string;
@@ -899,18 +907,19 @@ export async function getLiveWatchHistory(db: SQLiteDatabase) {
 export async function upsertLiveWatchHistory(db: SQLiteDatabase, input: LiveWatchHistoryInput) {
   const id = liveHistoryId(input);
   await db.runAsync(
-    `INSERT INTO live_watch_history (id, kind, channelId, channelName, channelUrl, sourceId, sourceName, logo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO live_watch_history (id, kind, channelId, channelName, channelUrl, tvgId, sourceId, sourceName, logo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        kind = excluded.kind,
        channelId = excluded.channelId,
        channelName = excluded.channelName,
        channelUrl = excluded.channelUrl,
+       tvgId = excluded.tvgId,
        sourceId = excluded.sourceId,
        sourceName = excluded.sourceName,
        logo = excluded.logo,
        updatedAt = strftime('%s','now')`,
-    [id, input.kind, input.channelId ?? null, input.channelName, input.channelUrl, input.sourceId ?? null, input.sourceName, input.logo]
+    [id, input.kind, input.channelId ?? null, input.channelName, input.channelUrl, input.tvgId ?? null, input.sourceId ?? null, input.sourceName, input.logo]
   );
   return id;
 }

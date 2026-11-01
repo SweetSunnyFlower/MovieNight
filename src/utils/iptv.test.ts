@@ -18,12 +18,14 @@ describe('parseM3U', () => {
       url: 'https://example.com/cctv1.m3u8',
       logo: 'https://example.com/cctv1.png',
       group: '央视',
+      tvgId: 'cctv1.cn',
     });
     expect(channels[1]).toEqual({
       name: '湖南卫视',
       url: 'https://example.com/hunan.m3u8',
       logo: undefined,
       group: '地方',
+      tvgId: undefined,
     });
   });
 

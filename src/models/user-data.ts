@@ -70,6 +70,7 @@ export interface LiveWatchHistoryRecord {
   channelId: string | null;
   channelName: string;
   channelUrl: string;
+  tvgId: string | null;
   sourceId: number | null;
   sourceName: string;
   logo: string;

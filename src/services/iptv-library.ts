@@ -515,3 +515,12 @@ export async function getEpgGuide(db: SQLiteDatabase, country: string, from: num
     ORDER BY c.name ASC, p.start ASC
   `, [country, Math.floor(from), Math.floor(to)]);
 }
+
+export async function getChannelEpg(db: SQLiteDatabase, channelId: string, from: number, to: number) {
+  return db.getAllAsync<IptvEpgProgramme>(`
+    SELECT channel, start, stop, title, description, category
+    FROM iptv_epg_programmes
+    WHERE channel = ? AND stop > ? AND start < ?
+    ORDER BY start ASC
+  `, [channelId, Math.floor(from), Math.floor(to)]);
+}

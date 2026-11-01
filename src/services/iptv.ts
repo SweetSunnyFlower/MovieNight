@@ -64,8 +64,9 @@ export async function getCachedIptvChannels(db: SQLiteDatabase, sourceId: number
     url: string;
     logo: string;
     groupTitle: string;
+    tvgId: string;
   }>(
-    'SELECT name, url, logo, groupTitle FROM iptv_source_channel_cache WHERE sourceId = ? ORDER BY rowid ASC',
+    'SELECT name, url, logo, groupTitle, tvgId FROM iptv_source_channel_cache WHERE sourceId = ? ORDER BY rowid ASC',
     [sourceId]
   );
   if (rows.length === 0) return null;
@@ -74,6 +75,7 @@ export async function getCachedIptvChannels(db: SQLiteDatabase, sourceId: number
     url: row.url,
     logo: row.logo || undefined,
     group: row.groupTitle || undefined,
+    tvgId: row.tvgId || undefined,
   }));
 }
 
@@ -84,11 +86,11 @@ export async function cacheIptvChannels(db: SQLiteDatabase, sourceId: number, ch
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM iptv_source_channel_cache WHERE sourceId = ?', [sourceId]);
     const statement = await db.prepareAsync(
-      'INSERT OR REPLACE INTO iptv_source_channel_cache (sourceId, name, url, logo, groupTitle) VALUES (?, ?, ?, ?, ?)'
+      'INSERT OR REPLACE INTO iptv_source_channel_cache (sourceId, name, url, logo, groupTitle, tvgId) VALUES (?, ?, ?, ?, ?, ?)'
     );
     try {
       for (const channel of uniqueChannels) {
-        await statement.executeAsync(sourceId, channel.name, channel.url, channel.logo ?? '', channel.group ?? '');
+        await statement.executeAsync(sourceId, channel.name, channel.url, channel.logo ?? '', channel.group ?? '', channel.tvgId ?? '');
       }
     } finally {
       await statement.finalizeAsync();

@@ -52,6 +52,7 @@ export default function WatchHistoryScreen() {
         url: item.kind === 'm3u' ? item.channelUrl : '',
         channelId: item.kind === 'library' ? (item.channelId ?? '') : '',
         name: item.channelName,
+        tvgId: item.tvgId ?? '',
         sourceId: item.kind === 'm3u' && item.sourceId != null ? String(item.sourceId) : '',
         sourceName: item.sourceName,
         logo: item.logo,

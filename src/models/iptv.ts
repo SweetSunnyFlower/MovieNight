@@ -13,6 +13,7 @@ export interface IptvChannel {
   url: string;
   logo?: string;
   group?: string;
+  tvgId?: string;
 }
 
 export interface IptvLibraryChannel {

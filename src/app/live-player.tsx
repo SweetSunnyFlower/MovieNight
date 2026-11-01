@@ -36,6 +36,7 @@ export default function LivePlayerScreen() {
     sourceUrl?: string;
     sourceName?: string;
     logo?: string;
+    tvgId?: string;
   }>();
 
   const kind = firstParam(params.kind);
@@ -152,6 +153,7 @@ export default function LivePlayerScreen() {
               channelId: null,
               channelName: firstParam(params.name) ?? '直播',
               channelUrl: uri,
+              tvgId: firstParam(params.tvgId) ?? null,
               sourceId: Number.isFinite(sourceId) && sourceId > 0 ? sourceId : null,
               sourceName: firstParam(params.sourceName) ?? '',
               logo: firstParam(params.logo) ?? '',
@@ -187,6 +189,7 @@ export default function LivePlayerScreen() {
               channelId: firstParam(params.channelId) ?? null,
               channelName: stream.title || firstParam(params.name) || '直播',
               channelUrl: stream.url,
+              tvgId: null,
               sourceId: null,
               sourceName: '在线频道库',
               logo: '',
@@ -254,6 +257,7 @@ export default function LivePlayerScreen() {
             channelId: firstParam(params.channelId) ?? null,
             channelName: name,
             channelUrl: stream.url,
+            tvgId: null,
             sourceId: null,
             sourceName: '在线频道库',
             logo: '',
@@ -317,6 +321,7 @@ export default function LivePlayerScreen() {
         channelId: null,
         channelName: channel.name,
         channelUrl: channel.url,
+        tvgId: channel.tvgId ?? null,
         sourceId: Number.isFinite(sourceId) && sourceId > 0 ? sourceId : null,
         sourceName: firstParam(params.sourceName) ?? '',
         logo: channel.logo ?? '',
@@ -480,7 +485,7 @@ export default function LivePlayerScreen() {
               }}
               hitSlop={8}
               accessibilityLabel="频道列表">
-              <List size={24} color="#fff" strokeWidth={2} />
+              <List size={20} color="#fff" strokeWidth={2} />
             </Pressable>
           ) : null}
           <Pressable
@@ -494,7 +499,7 @@ export default function LivePlayerScreen() {
             accessibilityLabel={favorite ? '取消收藏' : '收藏频道'}
             accessibilityState={{ selected: favorite }}>
             <Heart
-              size={25}
+              size={21}
               color="#fff"
               strokeWidth={2}
               fill={favorite ? '#fff' : 'transparent'}
@@ -696,8 +701,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   controlButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.42)',

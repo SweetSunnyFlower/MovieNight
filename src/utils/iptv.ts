@@ -31,6 +31,7 @@ export function parseM3U(content: string): IptvChannel[] {
         url: '',
         logo: attributeValue(line, 'tvg-logo') || undefined,
         group: attributeValue(line, 'group-title') || undefined,
+        tvgId: attributeValue(line, 'tvg-id') || undefined,
       };
       continue;
     }
